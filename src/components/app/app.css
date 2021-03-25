@@ -1,0 +1,39 @@
+* {
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.app {
+  background: #f3f7fa;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #4a4a4a;
+}
+
+/* .app-logo {
+  height: 40vmin;
+  pointer-events: none;
+} */
+
+.app-weapper {
+  min-height: 100vh;
+  max-width: 754px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 50px 0;
+  text-align: center;
+}
+
+.main {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-areas: 
+    'sidebar filter2'
+    'sidebar tickets';
+}

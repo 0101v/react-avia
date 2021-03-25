@@ -1,0 +1,46 @@
+.filter2 {
+  grid-area: filter2;
+  min-width: 502px;
+  display: flex;
+  height: 50px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filter2__element {
+  cursor: pointer;
+  user-select: none;
+  background-color: white;
+  border-radius: 1px solid #dfe5ec;
+  line-height: 50px;
+  width: 50%;
+  text-align: center;
+}
+
+.filter2__element:hover {
+  background: #2196F3;
+  color: white;
+}
+
+.clicked {
+  background: #2196f3;
+  color: white;
+}
+
+.low-price {
+  border-radius: 5px 0 0 5px;
+  border: 1px solid #DFE5EC;
+  border-right: 0;
+}
+
+.faster {
+  border-radius: 0;
+  border: 1px solid #DFE5EC;
+
+}
+
+.optimal {
+  border-radius: 0 5px 5px 0;
+  border: 1px solid #DFE5EC;
+  border-left: 0;
+}
