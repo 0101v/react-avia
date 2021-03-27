@@ -8,7 +8,7 @@ export default class Tickets extends React.Component {
     const hour = Math.floor(time/60);
     const minute = time - hour * 60;
     return `${hour}ч ${minute}м`
-  }; // перевод времини полета в формат Ч:М
+  }; // перевод времени полета в формат Ч:М
 
   timeFinish(startTime, time) {
     let [a, b] = startTime.split(':');
