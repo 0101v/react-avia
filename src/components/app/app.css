@@ -37,3 +37,8 @@
     'sidebar filter2'
     'sidebar tickets';
 }
+
+.spinner {
+  display:block;
+  margin:auto;
+}

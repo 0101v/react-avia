@@ -2,7 +2,7 @@ import React from 'react';
 
 import './sidebar.css';
 
-export default class Sidebar extends React.Component {
+export class Sidebar extends React.Component {
   
 
   handleCheckboxChange = ({target}) => {

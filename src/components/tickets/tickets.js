@@ -2,7 +2,7 @@ import React from 'react';
 
 import './tickets.css';
 
-export default class Tickets extends React.Component {
+export class Tickets extends React.Component {
   
   timeFly(time) {
     const hour = Math.floor(time/60);
@@ -83,9 +83,8 @@ export default class Tickets extends React.Component {
   };
 
   render() {
-
     const tickets = this.renderTickets(this.props.dataTickets);
-
+    
     return (
       <div className="tickets">
               {tickets}
@@ -95,5 +94,5 @@ export default class Tickets extends React.Component {
             </div>
    )
   }
-}
+};
 

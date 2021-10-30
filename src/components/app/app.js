@@ -1,26 +1,29 @@
 import React from 'react';
 
 import logo from '../../assets/logo.svg';
+import spinner from '../../assets/spinner.gif';
 
-import Tickets from '../tickets';
-import Filter2 from '../filter2';
-import Sidebar from '../sidebar';
+import { Tickets, Filter2, Sidebar } from '../../components';
 import getTickets from '../../services/swapi-service';
 
 import './app.css';
 
-let arrData = {
+const reducer = {
   all: true,
+  zero: false,
+  one: false,
+  two: false,
+  three: false,
   item: ''
 };
 
-export default class App extends React.Component {
+export class App extends React.Component {
   
-  state = { loading: false,
-            origDataTickets: null,
-            dataTickets: null,
-            filterItem: ''
-
+  state = { 
+    loading: false,
+    origDataTickets: null,
+    dataTickets: null,
+    problem: 0
   };
 
   connect = () => {
@@ -37,6 +40,7 @@ export default class App extends React.Component {
   componentDidMount() {
     this.connect();
   };
+
   componentDidUpdate(prevProps, prevState) {
     if (this.state.origDataTickets !== prevState.origDataTickets) {
       this.filterTransfer();
@@ -45,74 +49,93 @@ export default class App extends React.Component {
   };
 
   filter = (item) => {
-    arrData.item = item || arrData.item;
-    const arr = [...this.state.dataTickets];
+    reducer.item = item ?? reducer.item;
+    
+    if (reducer.all === false && reducer.one === false && reducer.two === false && reducer.three === false && reducer.zero === false) return;
+    
+    let arr = [...this.state.dataTickets];
 
-    if (arrData.item === 'low-price') {  
+    if (reducer.item === 'low-price') {  
       arr.sort((a, b) => a['price'] - b['price']);
-      this.setState({
-        dataTickets: arr,
-        filterItem: 'low-price'
-      });
     }
 
-    if (arrData.item === 'faster') {
+    if (reducer.item === 'faster') {
       arr.sort((a, b) => (a['departureDuration'] + a['arrivalDuration']) - (b['departureDuration'] + b['arrivalDuration']));
-      this.setState({
-        dataTickets: arr,
-        filterItem: 'faster'
-      });
     }
 
-    if (arrData.item === 'optimal') {
+    if (reducer.item === 'optimal') {
       arr.sort((a, b) => a['price'] / (a['departureDuration'] + a['arrivalDuration']) - 
                         b['price'] / (b['departureDuration'] + b['arrivalDuration'])
       );
-      this.setState({
-        dataTickets: arr,
-        filterItem: 'optimal'
-      });
     }
+    
+    this.setState({
+      dataTickets: arr      
+    });
   }; //фильтр билетов по критериям времени или цены
 
   filterTransfer = (num, boolean) => {
-    arrData[num] = boolean;
+    reducer[num] = boolean;
     const arr = [...this.state.origDataTickets];
     let arrFilter = [];
 
-    if (arrData.all === true) {
+    if (reducer.all === true) {
       this.setState({dataTickets: arr});
+      
       return;
     }
-    if (arrData.all === false) {
+    if (reducer.all === false) {
     }
-    if (arrData.zero === true) {
-      arrFilter = [...arrFilter, ...arr.filter((el) => el.departureTransferСount === 0)];
+    if (reducer.zero === true) {
+      arrFilter = [...arrFilter, ...arr.filter((el) => 
+        el.departureTransferСount === 0 && el.arrivalTransferСount === 0)];
     }
-    if (arrData.one === true) {
-      arrFilter = [...arrFilter, ...arr.filter((el) => el.departureTransferСount === 1)];
+    if (reducer.one === true) {
+      arrFilter = [...arrFilter, ...arr.filter((el) => el.departureTransferСount <= 1 && el.arrivalTransferСount <= 1)];
     }
-    if (arrData.two === true) {
-      arrFilter = [...arrFilter, ...arr.filter((el) => el.departureTransferСount === 2)];
+    if (reducer.two === true) {
+      arrFilter = [...arrFilter, ...arr.filter((el) => el.departureTransferСount <= 2 && el.arrivalTransferСount <= 2)];
     }
-    if (arrData.three === true) {
-      arrFilter = [...arrFilter, ...arr.filter((el) => el.departureTransferСount === 3)];
+    if (reducer.three === true) {
+      arrFilter = [...arrFilter, ...arr.filter((el) => el.departureTransferСount <= 3 && el.arrivalTransferСount <= 3)];
     }
-    this.setState({dataTickets: arrFilter});
+    
+    this.setState({dataTickets: [...new Set(arrFilter)]});
+    
   }; // фильтр билетов по пересадкам
 
   pushTickets = () => {
     getTickets().then(data => {
-      this.setState({
-        origDataTickets: [...this.state.origDataTickets, ...data],
-        dataTickets: [...this.state.dataTickets, ...data],
+      this.setState((state) => {
+        return {
+          origDataTickets: [...state.origDataTickets, ...data],
+          dataTickets: [...state.dataTickets, ...data],
+          loading: true,
+          problem: 0
+        }
       })
     })
-      .catch(() => this.pushTickets());
+      .catch(() => {
+        this.setState(({ problem }) => {
+          return {
+          loading: false,
+          problem: 1 + +problem
+          }
+        })
+        if (this.state.problem === 3) {
+          this.setState({loading: true, problem: 0});
+          alert("Не удалось загрузить данные - проблема с сетью");
+          return;
+        }
+        setTimeout(() => this.pushTickets(), 1000)});
+    
   }; // добавление +5 билетов
 
   render() {
-    const loadingTickets = this.state.loading ? <Tickets dataTickets={this.state.dataTickets} pushTickets={this.pushTickets}/> : "loading...";
+    
+    const loadingTickets = this.state.loading 
+      ? <Tickets dataTickets={this.state.dataTickets} pushTickets={this.pushTickets}/> 
+      : <img className='spinner' src={spinner} alt="loading..."/>;
     return (
       <div className="app">
         <div className='app-weapper'>
