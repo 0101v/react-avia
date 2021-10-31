@@ -87,11 +87,11 @@ export class Tickets extends React.Component {
     
     return (
       <div className="tickets">
-              {tickets}
-              <div className="add-tickets" onClick={this.props.pushTickets}>
-                <div className="add-tickets__button">Показать еще 5 билетов!</div>
-              </div>
-            </div>
+        {tickets}
+        <div className="add-tickets" onClick={this.props.pushTickets}>
+          <div className="add-tickets__button">Показать еще 5 билетов!</div>
+        </div>
+      </div>
    )
   }
 };

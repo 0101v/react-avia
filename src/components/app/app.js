@@ -4,151 +4,147 @@ import logo from '../../assets/logo.svg';
 import spinner from '../../assets/spinner.gif';
 
 import { Tickets, Filter2, Sidebar } from '../../components';
-import getTickets from '../../services/swapi-service';
+import getTickets from '../../services/avia-service';
 
 import './app.css';
 
-const reducer = {
-  all: true,
-  zero: false,
-  one: false,
-  two: false,
-  three: false,
-  item: ''
-};
-
-export class App extends React.Component {
-  
-  state = { 
+export const App = () => {
+  const [state, setState] = React.useState({
     loading: false,
-    origDataTickets: null,
-    dataTickets: null,
+    origDataTickets: [],
+    dataTickets: [],
     problem: 0
-  };
+  });
 
-  connect = () => {
+  const [stateFilter, setStateFilter] = React.useState({
+    all: true,
+    zero: false,
+    one: false,
+    two: false,
+    three: false,
+    item: ''
+  });
+
+  const connect = () => {
     getTickets().then(data => {
-      this.setState({
+      setState({
           loading: true,
           origDataTickets: data,
-          dataTickets: data
+          dataTickets: data,
+          problem: 0
       })
     })
-    .catch(() => this.connect())
-  }; // запрос данных
+    .catch(() => connect())
+  }; // первичный запрос данных
+  
+  React.useEffect(() => {
+    connect()
+  },[]);
 
-  componentDidMount() {
-    this.connect();
-  };
+  React.useEffect(() => {
+    filterTransfer();
+  },[stateFilter, state.origDataTickets]);
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.origDataTickets !== prevState.origDataTickets) {
-      this.filterTransfer();
-      this.filter();
-    }
-  };
+  const filter = (arr = [...state.dataTickets]) => {
+        
+    if (stateFilter.all === false 
+      && stateFilter.one === false 
+      && stateFilter.two === false 
+      && stateFilter.three === false 
+      && stateFilter.zero === false) return;
 
-  filter = (item) => {
-    reducer.item = item ?? reducer.item;
-    
-    if (reducer.all === false && reducer.one === false && reducer.two === false && reducer.three === false && reducer.zero === false) return;
-    
-    let arr = [...this.state.dataTickets];
-
-    if (reducer.item === 'low-price') {  
+    if (stateFilter.item === 'low-price') {  
       arr.sort((a, b) => a['price'] - b['price']);
-    }
-
-    if (reducer.item === 'faster') {
+    };
+    if (stateFilter.item === 'faster') {
       arr.sort((a, b) => (a['departureDuration'] + a['arrivalDuration']) - (b['departureDuration'] + b['arrivalDuration']));
-    }
-
-    if (reducer.item === 'optimal') {
+    };
+    if (stateFilter.item === 'optimal') {
       arr.sort((a, b) => a['price'] / (a['departureDuration'] + a['arrivalDuration']) - 
                         b['price'] / (b['departureDuration'] + b['arrivalDuration'])
-      );
+    );
     }
     
-    this.setState({
-      dataTickets: arr      
-    });
+    setState({...state, dataTickets: arr});
   }; //фильтр билетов по критериям времени или цены
 
-  filterTransfer = (num, boolean) => {
-    reducer[num] = boolean;
-    const arr = [...this.state.origDataTickets];
-    let arrFilter = [];
+  const filterTransfer = () => {
 
-    if (reducer.all === true) {
-      this.setState({dataTickets: arr});
-      
+    let arr = [...state.origDataTickets];
+
+    if (stateFilter.all === true) {
+      setState({...state, dataTickets: arr});
+      filter(arr);
       return;
     }
-    if (reducer.all === false) {
+    if (stateFilter.three === true) {
+      arr = state.origDataTickets.filter((el) => el.departureTransferСount <= 3 && el.arrivalTransferСount <= 3);
+      setState({...state, dataTickets: arr});
+      filter(arr);
+      return;
     }
-    if (reducer.zero === true) {
-      arrFilter = [...arrFilter, ...arr.filter((el) => 
-        el.departureTransferСount === 0 && el.arrivalTransferСount === 0)];
+    if (stateFilter.two === true) {
+      arr = state.origDataTickets.filter((el) => el.departureTransferСount <= 2 && el.arrivalTransferСount <= 2);
+      setState({...state, dataTickets: arr});
+      filter(arr);
+      return;
     }
-    if (reducer.one === true) {
-      arrFilter = [...arrFilter, ...arr.filter((el) => el.departureTransferСount <= 1 && el.arrivalTransferСount <= 1)];
+    if (stateFilter.one === true) {
+      arr = state.origDataTickets.filter((el) => el.departureTransferСount <= 1 && el.arrivalTransferСount <= 1);
+      setState({...state, dataTickets: arr});
+      filter(arr);
+      return;
     }
-    if (reducer.two === true) {
-      arrFilter = [...arrFilter, ...arr.filter((el) => el.departureTransferСount <= 2 && el.arrivalTransferСount <= 2)];
+    if (stateFilter.zero === true) {
+      arr = state.origDataTickets.filter((el) => el.departureTransferСount === 0 && el.arrivalTransferСount === 0);
+      setState({...state, dataTickets: arr});
+      filter(arr);
+      return;
     }
-    if (reducer.three === true) {
-      arrFilter = [...arrFilter, ...arr.filter((el) => el.departureTransferСount <= 3 && el.arrivalTransferСount <= 3)];
-    }
-    
-    this.setState({dataTickets: [...new Set(arrFilter)]});
+    setState({...state, dataTickets: []});
     
   }; // фильтр билетов по пересадкам
 
-  pushTickets = () => {
+  const pushTickets = () => {
     getTickets().then(data => {
-      this.setState((state) => {
-        return {
+      setState({
           origDataTickets: [...state.origDataTickets, ...data],
-          dataTickets: [...state.dataTickets, ...data],
+          dataTickets: [...state.dataTickets],
           loading: true,
           problem: 0
         }
-      })
+      )
     })
       .catch(() => {
-        this.setState(({ problem }) => {
-          return {
-          loading: false,
-          problem: 1 + +problem
+        setState((st) => {
+          if (st.problem === 3) {
+            alert("Не удалось загрузить данные - проблема с сетью");
+            return {...st, loading: true, problem: 0};
+          }
+          if (st.problem < 3) {
+            setTimeout(() => pushTickets(), 1000);
+            return {...st, loading: false, problem: 1 + +st.problem};
           }
         })
-        if (this.state.problem === 3) {
-          this.setState({loading: true, problem: 0});
-          alert("Не удалось загрузить данные - проблема с сетью");
-          return;
-        }
-        setTimeout(() => this.pushTickets(), 1000)});
-    
+      })
   }; // добавление +5 билетов
 
-  render() {
-    
-    const loadingTickets = this.state.loading 
-      ? <Tickets dataTickets={this.state.dataTickets} pushTickets={this.pushTickets}/> 
+  const loadingTickets = state.loading 
+      ? <Tickets dataTickets={state.dataTickets} pushTickets={pushTickets}/> 
       : <img className='spinner' src={spinner} alt="loading..."/>;
-    return (
-      <div className="app">
+
+  return (
+    <div className="app">
         <div className='app-weapper'>
           <div className="header">
             <img src={logo} alt="Avia"/>
           </div>
           <div className="main">
-            <Sidebar filterTransfer={this.filterTransfer}/> 
-            <Filter2 filter={this.filter}/>         
+            <Sidebar filterTransfer={filterTransfer} setStateFilter={setStateFilter} stateFilter={stateFilter} /> 
+            <Filter2 filter={filter} setStateFilter={setStateFilter} stateFilter={stateFilter} />         
             {loadingTickets} 
           </div>
         </div>
       </div>
     )
-  }
-}
+};
